@@ -45,7 +45,7 @@ BRAND_DICT = {
 
 st.set_page_config(page_title="HOTDEAL STRATEGY HUB", layout="wide")
 
-# [2] 통합 CSS 스타일 (줄바꿈 보존 로직 포함)
+# [2] 통합 CSS 스타일
 st.markdown("""
     <style>
     div[data-testid="stTextInput"] input { text-align: left; }
@@ -60,7 +60,7 @@ st.markdown("""
         border-radius: 8px;
         line-height: 1.6 !important;
         color: #495057;
-        white-space: pre-wrap !important; /* 이 코드가 줄 바꿈과 자간을 보존합니다 */
+        white-space: pre-wrap !important;
         text-align: left !important;
     }
     .notice-info { font-size: 0.8em; color: #adb5bd; margin-bottom: 8px; font-weight: 700; text-align: left; }
@@ -80,8 +80,8 @@ ndb = load_data(NOTICE_PATH)
 if 'authenticated' not in st.session_state:
     st.session_state.authenticated = False
 
-# [3] 사이드바 - 호칭 수정 및 노출 제어
-st.sidebar.title(f"🚀 운영 관리자 v155.11")
+# [3] 사이드바
+st.sidebar.title(f"🚀 운영 관리자 v155.12")
 menu = st.sidebar.selectbox("메뉴 선택", ["🏠 MD 포털", "🔐 관리자 통합 센터"])
 
 if menu == "🔐 관리자 통합 센터":
@@ -136,7 +136,7 @@ if menu == "🏠 MD 포털":
             st.info("업데이트 내역이 없습니다.")
     
     st.divider()
-    # 데이터 조회 영역 (이하 동일)
+    # 데이터 조회 영역
     p_list = ["전체"] + sorted([str(p) for p in db["플랫폼"].unique().tolist() if str(p).strip() != ""]) if not db.empty else ["전체"]
     col_q, col_p, col_s1, col_s2 = st.columns([2, 1, 1, 1], gap="small")
     with col_q: search_q = st.text_input("브랜드/제품명 검색", value="", placeholder="검색어 입력") 
@@ -164,7 +164,6 @@ elif menu == "🔐 관리자 통합 센터":
         st.title("🔐 관리자 시스템")
         t1, t2, t3 = st.tabs(["✨ 핫딜 등록", "📝 데이터 수정/삭제", "📢 게시물 관리"])
         
-        # ... (이하 관리자 탭 로직은 이전과 동일하게 유지)
         with t1:
             st.markdown('<div class="group-title">📂 카테고리/플랫폼 설정</div>', unsafe_allow_html=True)
             cat_choice = st.selectbox("카테고리 선택", list(BRAND_DICT.keys()))
@@ -180,9 +179,12 @@ elif menu == "🔐 관리자 통합 센터":
             c_h1, c_h2 = st.columns(2)
             co_v_raw = c_h1.text_input("쿠폰 할인", value="", key="reg_cov", placeholder="0"); co_t = c_h1.radio("단위", ["원", "%"], horizontal=True, key="reg_cot")
             ca_v_raw = c_h2.text_input("카드 할인", value="", key="reg_cav", placeholder="0"); ca_t = c_h2.radio("단위", ["원", "%"], horizontal=True, key="reg_cat")
+            
+            # [오류 수정 포인트]
             price = extract_num(price_raw); co_v = extract_num(co_v_raw); ca_v = extract_num(ca_v_raw)
             calc_co = co_v if co_t == "원" else (price * (co_v/100))
-            calc_ca = ca_v if ca_t == "원" else (price * (calc_ca/100))
+            calc_ca = ca_v if ca_t == "원" else (price * (ca_v/100)) # 이 부분의 calc_ca 오타 수정됨
+            
             final_preview = int(price - calc_co - calc_ca)
             st.markdown(f'<div class="price-analysis">🔍 <b>최종 혜택가:</b> <span style="font-size:1.4em; color:#e03131;">{final_preview:,}원</span></div>', unsafe_allow_html=True)
             st.markdown('<div class="group-title">📅 일정/기타</div>', unsafe_allow_html=True)
