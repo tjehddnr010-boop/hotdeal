@@ -1,4 +1,4 @@
-# v165.10 - 사이드바 기본 닫힘 설정 재확인 및 기타 기능 유지 버전
+# v165.11 - 데이터 수정/삭제 탭의 직관성(수정 버튼 명시) 강화 버전
 
 import streamlit as st
 import pandas as pd
@@ -60,12 +60,8 @@ BRAND_DICT = {
     "뷰티": ["아모레퍼시픽", "올리브영", "설화수", "닥터자르트", "이니스프리", "랑콤", "에스티로더", "헤라", "넘버즈인"]
 }
 
-# [2] 페이지 설정 - 사이드바 닫힘 상태 고정
-st.set_page_config(
-    page_title="HOTDEAL STRATEGY HUB", 
-    layout="wide", 
-    initial_sidebar_state="collapsed"
-)
+# [2] 페이지 설정 (사이드바 기본 닫힘 유지)
+st.set_page_config(page_title="HOTDEAL STRATEGY HUB", layout="wide", initial_sidebar_state="collapsed")
 
 # [3] 맞춤형 CSS
 st.markdown("""
@@ -80,19 +76,7 @@ st.markdown("""
     .kakao-container { display: flex; justify-content: flex-end; align-items: center; height: 100%; padding-top: 25px; }
     .kakao-btn { display: inline-flex; align-items: center; justify-content: center; padding: 12px 24px; background-color: #FEE500; color: #3C1E1E !important; border-radius: 30px; font-weight: 800; text-decoration: none !important; font-size: 0.95em; box-shadow: 0 4px 15px rgba(254, 229, 0, 0.3); border: 1px solid #FADA00; }
     .notice-card { padding: 22px; background-color: #ffffff; border: 1px solid #dee2e6; border-radius: 12px; line-height: 1.8; color: #495057; text-align: left !important; }
-    
-    .empty-guide { 
-        color: #909294; 
-        font-size: 1.1em; 
-        font-weight: 500; 
-        padding: 50px 0; 
-        text-align: center; 
-        border: 1px dashed #e9ecef; 
-        border-radius: 12px; 
-        background-color: #fcfcfc; 
-        margin: 20px 0;
-        letter-spacing: -0.5px;
-    }
+    .empty-guide { color: #909294; font-size: 1.1em; font-weight: 500; padding: 50px 0; text-align: center; border: 1px dashed #e9ecef; border-radius: 12px; background-color: #fcfcfc; margin: 20px 0; letter-spacing: -0.5px; }
     .smart-viewer { background-color: #2b3035; color: #ffffff; padding: 10px 18px; border-radius: 8px; font-size: 1.1em; font-weight: 700; margin-bottom: 15px; border-left: 6px solid #fcc419; }
     </style>
 """, unsafe_allow_html=True)
@@ -104,7 +88,7 @@ if 'authenticated' not in st.session_state: st.session_state.authenticated = Fal
 if 'prod_val' not in st.session_state: st.session_state.prod_val = ""
 
 # [4] 사이드바 내비게이션
-st.sidebar.title(f"🚀 운영 관리자 v165.10")
+st.sidebar.title(f"🚀 운영 관리자 v165.11")
 menu = st.sidebar.selectbox("메뉴 선택", ["🏠 MD 포털", "🔐 관리자 통합 센터"])
 
 if menu == "🔐 관리자 통합 센터":
@@ -282,10 +266,30 @@ elif menu == "🔐 관리자 통합 센터" and st.session_state.authenticated:
                 st.session_state.prod_val = ""; st.success("등록 완료!"); time.sleep(1); st.cache_data.clear(); st.rerun()
 
     with t2:
+        # [수정 사항] 데이터 수정/삭제 직관성 강화
         if not db.empty:
+            st.write("💡 표 안의 내용을 클릭하여 직접 수정한 후 아래 **수정 내용 저장** 버튼을 눌러주세요.")
             ed = st.data_editor(db, use_container_width=True, hide_index=True, key="ad_editor")
-            if st.button("💾 저장", use_container_width=True): ed.to_csv(DB_PATH, index=False, encoding="utf-8-sig"); st.cache_data.clear(); st.rerun()
-            if st.button("🗑️ 삭제", use_container_width=True): ed[ed["선택"]==False].to_csv(DB_PATH, index=False, encoding="utf-8-sig"); st.cache_data.clear(); st.rerun()
+            
+            mc1, mc2 = st.columns(2)
+            with mc1:
+                # '저장' 대신 '수정 내용 저장'으로 변경하여 역할 명시
+                if st.button("💾 수정 내용 저장", use_container_width=True, type="primary"): 
+                    ed.to_csv(DB_PATH, index=False, encoding="utf-8-sig")
+                    st.cache_data.clear()
+                    st.success("데이터가 성공적으로 수정되었습니다.")
+                    time.sleep(1)
+                    st.rerun()
+            with mc2:
+                # 삭제 기능 유지
+                if st.button("🗑️ 선택 항목 삭제", use_container_width=True): 
+                    ed[ed["선택"]==False].to_csv(DB_PATH, index=False, encoding="utf-8-sig")
+                    st.cache_data.clear()
+                    st.warning("선택된 항목이 삭제되었습니다.")
+                    time.sleep(1)
+                    st.rerun()
+        else:
+            st.info("데이터베이스에 등록된 상품이 없습니다.")
 
     with t3:
         st.markdown('<div class="group-title">✍️ 새 게시물 등록</div>', unsafe_allow_html=True)
