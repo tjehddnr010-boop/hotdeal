@@ -1,4 +1,4 @@
-# v165.9 - 사이드바 기본 닫힘(collapsed) 설정 적용 버전
+# v165.10 - 사이드바 기본 닫힘 설정 재확인 및 기타 기능 유지 버전
 
 import streamlit as st
 import pandas as pd
@@ -60,8 +60,12 @@ BRAND_DICT = {
     "뷰티": ["아모레퍼시픽", "올리브영", "설화수", "닥터자르트", "이니스프리", "랑콤", "에스티로더", "헤라", "넘버즈인"]
 }
 
-# [2] 페이지 설정 - initial_sidebar_state="collapsed"로 설정하여 기본으로 닫혀있게 함
-st.set_page_config(page_title="HOTDEAL STRATEGY HUB", layout="wide", initial_sidebar_state="collapsed")
+# [2] 페이지 설정 - 사이드바 닫힘 상태 고정
+st.set_page_config(
+    page_title="HOTDEAL STRATEGY HUB", 
+    layout="wide", 
+    initial_sidebar_state="collapsed"
+)
 
 # [3] 맞춤형 CSS
 st.markdown("""
@@ -100,7 +104,7 @@ if 'authenticated' not in st.session_state: st.session_state.authenticated = Fal
 if 'prod_val' not in st.session_state: st.session_state.prod_val = ""
 
 # [4] 사이드바 내비게이션
-st.sidebar.title(f"🚀 운영 관리자 v165.9")
+st.sidebar.title(f"🚀 운영 관리자 v165.10")
 menu = st.sidebar.selectbox("메뉴 선택", ["🏠 MD 포털", "🔐 관리자 통합 센터"])
 
 if menu == "🔐 관리자 통합 센터":
