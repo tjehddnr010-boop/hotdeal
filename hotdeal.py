@@ -1,4 +1,4 @@
-# v165.4 - 안내 문구(Empty Guide)를 가볍고 세련된 스타일로 변경한 버전
+# v165.9 - 사이드바 기본 닫힘(collapsed) 설정 적용 버전
 
 import streamlit as st
 import pandas as pd
@@ -10,7 +10,7 @@ from difflib import get_close_matches
 # =================================================================
 # 📢 런칭 전 필수 설정
 # =================================================================
-KAKAO_LINK = "https://open.kakao.com/o/YOUR_LINK" 
+KAKAO_LINK = "https://open.kakao.com/o/gQshP8fi" 
 # =================================================================
 
 # [1] 데이터 로드 및 초기 설정
@@ -60,7 +60,7 @@ BRAND_DICT = {
     "뷰티": ["아모레퍼시픽", "올리브영", "설화수", "닥터자르트", "이니스프리", "랑콤", "에스티로더", "헤라", "넘버즈인"]
 }
 
-# [2] 페이지 설정
+# [2] 페이지 설정 - initial_sidebar_state="collapsed"로 설정하여 기본으로 닫혀있게 함
 st.set_page_config(page_title="HOTDEAL STRATEGY HUB", layout="wide", initial_sidebar_state="collapsed")
 
 # [3] 맞춤형 CSS
@@ -77,7 +77,6 @@ st.markdown("""
     .kakao-btn { display: inline-flex; align-items: center; justify-content: center; padding: 12px 24px; background-color: #FEE500; color: #3C1E1E !important; border-radius: 30px; font-weight: 800; text-decoration: none !important; font-size: 0.95em; box-shadow: 0 4px 15px rgba(254, 229, 0, 0.3); border: 1px solid #FADA00; }
     .notice-card { padding: 22px; background-color: #ffffff; border: 1px solid #dee2e6; border-radius: 12px; line-height: 1.8; color: #495057; text-align: left !important; }
     
-    /* [v165.4] 안내 문구 스타일: 가벼운 느낌으로 수정 */
     .empty-guide { 
         color: #909294; 
         font-size: 1.1em; 
@@ -101,7 +100,7 @@ if 'authenticated' not in st.session_state: st.session_state.authenticated = Fal
 if 'prod_val' not in st.session_state: st.session_state.prod_val = ""
 
 # [4] 사이드바 내비게이션
-st.sidebar.title(f"🚀 운영 관리자 v165.4")
+st.sidebar.title(f"🚀 운영 관리자 v165.9")
 menu = st.sidebar.selectbox("메뉴 선택", ["🏠 MD 포털", "🔐 관리자 통합 센터"])
 
 if menu == "🔐 관리자 통합 센터":
@@ -168,10 +167,10 @@ if menu == "🏠 MD 포털":
     sc1, sc2, sc3 = st.columns([2, 1, 1])
     with sc1: s_name = st.text_input("분석할 제품명 입력", placeholder="예: 인존 버즈", key="sim_n_v55")
     with sc2:
-        s_p = st.text_input("예상 최종혜택가(원)", value="0", key="sim_p_v55")
+        s_p = st.text_input("예상 최종혜택가(원)", value="", key="sim_p_v55")
         if s_p and extract_num(s_p) > 0: st.markdown(f'<div class="smart-viewer">💰 {format_korean_unit(extract_num(s_p))}</div>', unsafe_allow_html=True)
     with sc3:
-        s_f = st.text_input("예상 체감가(원)", value="0", key="sim_f_v55")
+        s_f = st.text_input("예상 체감가(원)", value="", key="sim_f_v55")
         if s_f and extract_num(s_f) > 0: st.markdown(f'<div class="smart-viewer">✨ {format_korean_unit(extract_num(s_f))}</div>', unsafe_allow_html=True)
 
     if s_name and not db.empty:
@@ -239,29 +238,42 @@ elif menu == "🔐 관리자 통합 센터" and st.session_state.authenticated:
                 for idx, m_name in enumerate(matches):
                     if m_cols[idx].button(f"📍 {m_name}", key=f"m_btn_{idx}", use_container_width=True):
                         st.session_state.prod_val = m_name; st.rerun()
-        st.markdown('<div class="group-title">💰 금액 설정</div>', unsafe_allow_html=True)
-        p_raw = st.text_input("정상가 (원)", value="0", key="ad_praw")
+        
+        st.markdown('<div class="group-title">💰 금액 및 상세 할인 설정</div>', unsafe_allow_html=True)
+        p_raw = st.text_input("정상가 (원)", value="", key="ad_praw")
+        
         cd1, cd2 = st.columns(2)
         with cd1:
-            cov = extract_num(st.text_input("쿠폰 할인", value="0", key="ad_cov"))
+            cov = extract_num(st.text_input("쿠폰 할인", value="", key="ad_cov"))
             cot = st.radio("쿠폰 단위", ["원", "%"], horizontal=True, key="ad_cot")
+            ex1v = extract_num(st.text_input("기타 할인 1", value="", key="ad_ex1v"))
+            ex1t = st.radio("기타 1 단위", ["원", "%"], horizontal=True, key="ad_ex1t")
         with cd2:
-            cav = extract_num(st.text_input("카드 할인", value="0", key="ad_cav"))
+            cav = extract_num(st.text_input("카드 할인", value="", key="ad_cav"))
             cat_unit = st.radio("카드 단위", ["원", "%"], horizontal=True, key="ad_catu")
+            ex2v = extract_num(st.text_input("기타 할인 2", value="", key="ad_ex2v"))
+            ex2t = st.radio("기타 2 단위", ["원", "%"], horizontal=True, key="ad_ex2t")
+            
         gift = st.text_area("🎁 사은품 구성", key="ad_gift")
+        
         p_v = extract_num(p_raw)
-        auto_f = int(p_v - (cov if cot=="원" else p_v*(cov/100)) - (cav if cat_unit=="원" else p_v*(cav/100)))
-        st.info(f"📋 자동 계산 혜택가: {auto_f:,}원")
-        cf1, cf2 = st.columns(2)
-        final_i = cf1.text_input("최종혜택가 확정", value=str(auto_f), key="ad_fin")
-        feel_i = cf2.text_input("✨ 최종 체감가", value=str(auto_f), key="ad_fee")
+        d_coupon = cov if cot=="원" else p_v*(cov/100)
+        d_card = cav if cat_unit=="원" else p_v*(cav/100)
+        d_ex1 = ex1v if ex1t=="원" else p_v*(ex1v/100)
+        d_ex2 = ex2v if ex2t=="원" else p_v*(ex2v/100)
+        
+        auto_f = int(p_v - d_coupon - d_card - d_ex1 - d_ex2)
+        st.info(f"📋 자동 계산 혜택가 (쿠폰+카드+기타1,2 반영): {auto_f:,}원")
+        
+        feel_i = st.text_input("✨ 최종 체감가 (원)", value="", key="ad_fee")
         ev_date = st.date_input("행사 일정", [date.today(), date.today()], key="ad_date")
+        
         if st.button("🚀 핫딜 데이터베이스 등록", use_container_width=True):
             if not prod: st.error("제품명을 입력하세요!")
             else:
                 f_pf, f_br = pf_m if pf_m.strip() else pf_s, br_m if br_m.strip() else br_s
                 dr = f"{ev_date[0]} ~ {ev_date[1]}" if len(ev_date)==2 else str(ev_date[0])
-                new = pd.DataFrame([{"선택":False,"등록날짜":datetime.now().strftime("%Y-%m-%d"),"카테고리":cat,"플랫폼":f_pf,"브랜드":f_br,"제품명":prod,"표준모델명":std,"정상가":f"{int(p_v):,}원","행사일정":dr,"최종혜택가":f"{int(extract_num(final_i)):,}원","체감가":f"{int(extract_num(feel_i)):,}원","사은품":gift}])
+                new = pd.DataFrame([{"선택":False,"등록날짜":datetime.now().strftime("%Y-%m-%d"),"카테고리":cat,"플랫폼":f_pf,"브랜드":f_br,"제품명":prod,"표준모델명":std,"정상가":f"{int(p_v):,}원","행사일정":dr,"최종혜택가":f"{int(auto_f):,}원","체감가":f"{int(extract_num(feel_i)):,}원","사은품":gift}])
                 pd.concat([db, new], ignore_index=True).to_csv(DB_PATH, index=False, encoding="utf-8-sig")
                 st.session_state.prod_val = ""; st.success("등록 완료!"); time.sleep(1); st.cache_data.clear(); st.rerun()
 
